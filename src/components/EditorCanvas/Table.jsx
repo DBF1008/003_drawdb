@@ -73,6 +73,7 @@ export default function Table({
     setSelectedElement,
     bulkSelectedElements,
     setBulkSelectedElements,
+    highlightedElement,
   } = useSelect();
 
   const borderColor = useMemo(
@@ -106,6 +107,13 @@ export default function Table({
       )
     );
   }, [selectedElement, tableData, bulkSelectedElements]);
+
+  const isHighlighted = useMemo(() => {
+    return (
+      highlightedElement.element === ObjectType.TABLE &&
+      highlightedElement.id === tableData.id
+    );
+  }, [highlightedElement, tableData.id]);
 
   const toggleTableCollapse = (e) => {
     e.stopPropagation();
@@ -247,7 +255,7 @@ export default function Table({
                  settings.mode === "light"
                    ? "bg-zinc-100 text-zinc-800"
                    : "bg-zinc-800 text-zinc-200"
-               } ${isSelected ? "border-solid border-blue-500" : borderColor}`}
+               } ${isSelected ? "border-solid border-blue-500" : borderColor} ${isHighlighted ? "search-highlight" : ""}`}
           style={{ direction: "ltr" }}
         >
           <div
@@ -493,7 +501,7 @@ export default function Table({
       <div
         className={`${
           index === visibleFields.length - 1 ? "" : "border-b border-gray-400"
-        } group w-full overflow-hidden`}
+        } group w-full overflow-hidden ${isHighlighted && highlightedElement.fieldId === fieldData.id ? "search-highlight-field" : ""}`}
         onPointerEnter={(e) => {
           if (!e.isPrimary) return;
 

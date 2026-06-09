@@ -42,6 +42,7 @@ export default function Area({
     setSelectedElement,
     bulkSelectedElements,
     setBulkSelectedElements,
+    highlightedElement,
   } = useSelect();
 
   const handleResize = (e, dir) => {
@@ -150,6 +151,13 @@ export default function Area({
     );
   }, [selectedElement, data, bulkSelectedElements]);
 
+  const isHighlighted = useMemo(() => {
+    return (
+      highlightedElement.element === ObjectType.AREA &&
+      highlightedElement.id === data.id
+    );
+  }, [highlightedElement, data.id]);
+
   return (
     <g ref={ref}>
       <foreignObject
@@ -167,7 +175,7 @@ export default function Area({
               : isSelected
                 ? "border-blue-500 opacity-100"
                 : "border-slate-400 opacity-100"
-          }`}
+          } ${isHighlighted ? "search-highlight" : ""}`}
           style={{ backgroundColor: `${data.color}66` }}
           onDoubleClick={edit}
         >

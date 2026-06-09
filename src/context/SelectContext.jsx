@@ -14,6 +14,11 @@ export default function SelectContextProvider({ children }) {
     openFromToolbar: false, // this is to handle triggering onClickOutside when sidebar is disabled
   });
   const [bulkSelectedElements, setBulkSelectedElements] = useState([]);
+  const [highlightedElement, setHighlightedElement] = useState({
+    element: ObjectType.NONE,
+    id: -1,
+    fieldId: null,
+  });
 
   return (
     <SelectContext.Provider
@@ -22,6 +27,8 @@ export default function SelectContextProvider({ children }) {
         setSelectedElement,
         bulkSelectedElements,
         setBulkSelectedElements,
+        highlightedElement,
+        setHighlightedElement,
       }}
     >
       {children}

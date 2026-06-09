@@ -11,6 +11,8 @@ const defaultLayout = {
   toolbar: true,
   dbmlEditor: false,
   readOnly: false,
+  globalSearchOpen: false,
+  globalSearchMode: "find",
 };
 
 export default function LayoutContextProvider({ children }) {

@@ -24,7 +24,7 @@ import {
   useSettings,
 } from "../../hooks";
 import { useTranslation } from "react-i18next";
-import { noteWidth, noteRadius, noteFold } from "../../data/constants";
+import { noteWidth, noteRadius, noteFold, ObjectType } from "../../data/constants";
 
 export default function Note({ data, onPointerDown }) {
   const [editField, setEditField] = useState({});
@@ -44,6 +44,7 @@ export default function Note({ data, onPointerDown }) {
     setSelectedElement,
     bulkSelectedElements,
     setBulkSelectedElements,
+    highlightedElement,
   } = useSelect();
   const initialColorRef = useRef(data.color);
 
@@ -187,6 +188,13 @@ export default function Note({ data, onPointerDown }) {
     );
   }, [selectedElement, data, bulkSelectedElements]);
 
+  const isHighlighted = useMemo(() => {
+    return (
+      highlightedElement.element === ObjectType.NOTE &&
+      highlightedElement.id === data.id
+    );
+  }, [highlightedElement, data.id]);
+
   const width = data.width ?? noteWidth;
   const MIN_NOTE_WIDTH = 120;
 
@@ -227,15 +235,18 @@ export default function Note({ data, onPointerDown }) {
         } L${data.x} ${data.y + noteFold}`}
         fill={data.color}
         stroke={
-          hovered
+          isHighlighted
             ? "rgb(59 130 246)"
-            : isSelected
+            : hovered
               ? "rgb(59 130 246)"
-              : "rgb(168 162 158)"
+              : isSelected
+                ? "rgb(59 130 246)"
+                : "rgb(168 162 158)"
         }
         strokeDasharray={hovered ? 5 : 0}
         strokeLinejoin="round"
-        strokeWidth="2"
+        strokeWidth={isHighlighted ? "4" : "2"}
+        style={isHighlighted ? { animation: "search-highlight-stroke 0.5s ease-in-out 3" } : {}}
       />
       <path
         d={`M${data.x} ${data.y + noteFold} L${data.x + noteFold - noteRadius} ${
@@ -245,8 +256,10 @@ export default function Note({ data, onPointerDown }) {
         } ${data.y} L${data.x} ${data.y + noteFold} Z`}
         fill={data.color}
         stroke={
-          hovered
+          isHighlighted
             ? "rgb(59 130 246)"
+            : hovered
+              ? "rgb(59 130 246)"
             : isSelected
               ? "rgb(59 130 246)"
               : "rgb(168 162 158)"
