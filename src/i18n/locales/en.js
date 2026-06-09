@@ -300,6 +300,16 @@ const en = {
     force_hide: "Force hide",
     primary_key: "Primary key",
     foreign_key: "Foreign key",
+    schema_only: "Schema Only",
+    naming_convention: "Naming",
+    original: "Original",
+    import_summary: "Import Summary",
+    tables_imported: "Tables imported",
+    relationships_imported: "Relationships imported",
+    enums_imported: "Enums imported",
+    items_skipped: "Items skipped",
+    partial_import_warning:
+      "Some items could not be imported and were skipped.",
   },
 };
 

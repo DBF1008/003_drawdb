@@ -1011,16 +1011,20 @@ export default function ControlPanel({
               name: "MySQL",
               function: () => {
                 openExportModal(MODAL.CODE);
-                const src = jsonToMySQL({
+                const diagramData = {
                   tables: tables,
                   references: relationships,
                   types: types,
                   database: database,
-                });
+                };
+                const src = jsonToMySQL(diagramData);
                 setExportData((prev) => ({
                   ...prev,
                   data: src,
                   extension: "sql",
+                  sqlDiagramData: diagramData,
+                  sqlDialect: DB.MYSQL,
+                  sqlIsGeneric: true,
                 }));
               },
             },
@@ -1028,16 +1032,20 @@ export default function ControlPanel({
               name: "PostgreSQL",
               function: () => {
                 openExportModal(MODAL.CODE);
-                const src = jsonToPostgreSQL({
+                const diagramData = {
                   tables: tables,
                   references: relationships,
                   types: types,
                   database: database,
-                });
+                };
+                const src = jsonToPostgreSQL(diagramData);
                 setExportData((prev) => ({
                   ...prev,
                   data: src,
                   extension: "sql",
+                  sqlDiagramData: diagramData,
+                  sqlDialect: DB.POSTGRES,
+                  sqlIsGeneric: true,
                 }));
               },
             },
@@ -1045,16 +1053,20 @@ export default function ControlPanel({
               name: "SQLite",
               function: () => {
                 openExportModal(MODAL.CODE);
-                const src = jsonToSQLite({
+                const diagramData = {
                   tables: tables,
                   references: relationships,
                   types: types,
                   database: database,
-                });
+                };
+                const src = jsonToSQLite(diagramData);
                 setExportData((prev) => ({
                   ...prev,
                   data: src,
                   extension: "sql",
+                  sqlDiagramData: diagramData,
+                  sqlDialect: DB.SQLITE,
+                  sqlIsGeneric: true,
                 }));
               },
             },
@@ -1062,16 +1074,20 @@ export default function ControlPanel({
               name: "MariaDB",
               function: () => {
                 openExportModal(MODAL.CODE);
-                const src = jsonToMariaDB({
+                const diagramData = {
                   tables: tables,
                   references: relationships,
                   types: types,
                   database: database,
-                });
+                };
+                const src = jsonToMariaDB(diagramData);
                 setExportData((prev) => ({
                   ...prev,
                   data: src,
                   extension: "sql",
+                  sqlDiagramData: diagramData,
+                  sqlDialect: DB.MARIADB,
+                  sqlIsGeneric: true,
                 }));
               },
             },
@@ -1079,16 +1095,20 @@ export default function ControlPanel({
               name: "MSSQL",
               function: () => {
                 openExportModal(MODAL.CODE);
-                const src = jsonToSQLServer({
+                const diagramData = {
                   tables: tables,
                   references: relationships,
                   types: types,
                   database: database,
-                });
+                };
+                const src = jsonToSQLServer(diagramData);
                 setExportData((prev) => ({
                   ...prev,
                   data: src,
                   extension: "sql",
+                  sqlDiagramData: diagramData,
+                  sqlDialect: DB.MSSQL,
+                  sqlIsGeneric: true,
                 }));
               },
             },
@@ -1097,16 +1117,20 @@ export default function ControlPanel({
               name: "Oracle",
               function: () => {
                 openExportModal(MODAL.CODE);
-                const src = jsonToOracleSQL({
+                const diagramData = {
                   tables: tables,
                   references: relationships,
                   types: types,
                   database: database,
-                });
+                };
+                const src = jsonToOracleSQL(diagramData);
                 setExportData((prev) => ({
                   ...prev,
                   data: src,
                   extension: "sql",
+                  sqlDiagramData: diagramData,
+                  sqlDialect: DB.ORACLESQL,
+                  sqlIsGeneric: true,
                 }));
               },
             },
@@ -1115,17 +1139,21 @@ export default function ControlPanel({
         function: () => {
           if (database === DB.GENERIC) return;
           openExportModal(MODAL.CODE);
-          const src = exportSQL({
+          const diagramData = {
             tables: tables,
             references: relationships,
             types: types,
             database: database,
             enums: enums,
-          });
+          };
+          const src = exportSQL(diagramData);
           setExportData((prev) => ({
             ...prev,
             data: src,
             extension: "sql",
+            sqlDiagramData: diagramData,
+            sqlDialect: database,
+            sqlIsGeneric: false,
           }));
         },
       },

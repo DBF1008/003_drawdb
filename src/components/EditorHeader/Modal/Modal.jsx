@@ -1,8 +1,16 @@
-import { Image, Input, Modal as SemiUIModal, Spin } from "@douyinfe/semi-ui";
+import {
+  Checkbox,
+  Image,
+  Input,
+  Modal as SemiUIModal,
+  Radio,
+  RadioGroup,
+  Spin,
+} from "@douyinfe/semi-ui";
 import { saveAs } from "file-saver";
 import { Parser } from "node-sql-parser";
 import { Parser as OracleParser } from "oracle-sql-parser";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DB, MODAL, STATUS } from "../../../data/constants";
 import { databases } from "../../../data/databases";
@@ -19,6 +27,16 @@ import {
 } from "../../../hooks";
 import { isRtl } from "../../../i18n/utils/rtl";
 import { importSQL } from "../../../utils/importSQL";
+import { exportSQL } from "../../../utils/exportSQL";
+import {
+  jsonToMySQL,
+  jsonToPostgreSQL,
+  jsonToSQLite,
+  jsonToMariaDB,
+  jsonToSQLServer,
+  jsonToOracleSQL,
+} from "../../../utils/exportSQL/generic";
+import { preprocessDiagram } from "../../../utils/exportSQL/preprocessDiagram";
 import {
   getModalTitle,
   getModalWidth,
@@ -78,7 +96,50 @@ export default function Modal({
   const [selectedTemplateId, setSelectedTemplateId] = useState(-1);
   const [selectedDiagramId, setSelectedDiagramId] = useState(0);
   const [saveAsTitle, setSaveAsTitle] = useState(title);
+  const [schemaOnly, setSchemaOnly] = useState(false);
+  const [namingConvention, setNamingConvention] = useState("original");
   const navigate = useNavigateWithParams();
+
+  const regenerateSQL = useCallback((diagramData, dialect, isGeneric, opts) => {
+    const processed = preprocessDiagram(diagramData, opts);
+    if (isGeneric) {
+      switch (dialect) {
+        case DB.MYSQL:
+          return jsonToMySQL(processed);
+        case DB.POSTGRES:
+          return jsonToPostgreSQL(processed);
+        case DB.SQLITE:
+          return jsonToSQLite(processed);
+        case DB.MARIADB:
+          return jsonToMariaDB(processed);
+        case DB.MSSQL:
+          return jsonToSQLServer(processed);
+        case DB.ORACLESQL:
+          return jsonToOracleSQL(processed);
+        default:
+          return "";
+      }
+    } else {
+      return exportSQL(processed);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (
+      modal === MODAL.CODE &&
+      exportData.extension === "sql" &&
+      exportData.sqlDiagramData
+    ) {
+      const opts = { schemaOnly, namingConvention };
+      const newData = regenerateSQL(
+        exportData.sqlDiagramData,
+        exportData.sqlDialect,
+        exportData.sqlIsGeneric,
+        opts,
+      );
+      setExportData((prev) => ({ ...prev, data: newData }));
+    }
+  }, [schemaOnly, namingConvention]);
 
   const overwriteDiagram = () => {
     setTables(importData.tables);
@@ -279,13 +340,43 @@ export default function Modal({
                 <Image src={exportData.data} alt="Diagram" height={280} />
               ) : (
                 <CodeEditor
-                  height={360}
+                  height={
+                    exportData.extension === "sql" &&
+                    exportData.sqlDiagramData
+                      ? 300
+                      : 360
+                  }
                   value={exportData.data}
                   language={extensionToLanguage[exportData.extension]}
                   options={{ readOnly: true }}
                   showCopyButton={true}
                 />
               )}
+              {modal === MODAL.CODE &&
+                exportData.extension === "sql" &&
+                exportData.sqlDiagramData && (
+                  <div className="flex items-center gap-6 mt-2 py-2 border-t">
+                    <Checkbox
+                      checked={schemaOnly}
+                      onChange={(e) => setSchemaOnly(e.target.checked)}
+                    >
+                      {t("schema_only")}
+                    </Checkbox>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{t("naming_convention")}:</span>
+                      <RadioGroup
+                        type="button"
+                        size="small"
+                        value={namingConvention}
+                        onChange={(e) => setNamingConvention(e.target.value)}
+                      >
+                        <Radio value="original">{t("original")}</Radio>
+                        <Radio value="snake_case">snake_case</Radio>
+                        <Radio value="camelCase">camelCase</Radio>
+                      </RadioGroup>
+                    </div>
+                  </div>
+                )}
               <div className="text-sm font-semibold mt-2">{t("filename")}:</div>
               <Input
                 value={exportData.filename}
@@ -347,6 +438,8 @@ export default function Modal({
           src: "",
           overwrite: false,
         });
+        setSchemaOnly(false);
+        setNamingConvention("original");
       }}
       onCancel={() => {
         if (modal === MODAL.RENAME) setUncontrolledTitle(title);

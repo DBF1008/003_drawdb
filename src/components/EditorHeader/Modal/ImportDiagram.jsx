@@ -11,6 +11,7 @@ import {
   useDiagram,
   useTypes,
 } from "../../../hooks";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fromDBML } from "../../../utils/importFrom/dbml";
 
@@ -26,6 +27,8 @@ export default function ImportDiagram({
   const { types } = useTypes();
   const { enums } = useEnums();
   const { t } = useTranslation();
+  const [importWarnings, setImportWarnings] = useState([]);
+  const [importSummary, setImportSummary] = useState(null);
 
   const diagramIsEmpty = () => {
     return (
@@ -129,10 +132,36 @@ export default function ImportDiagram({
 
   const loadDBMLData = (e) => {
     try {
-      setImportData(fromDBML(e.target.result));
-    } catch (error) {
-      const message = `${error.diags[0].name} [Ln ${error.diags[0].location.start.line}, Col ${error.diags[0].location.start.column}]: ${error.diags[0].message}`;
+      const result = fromDBML(e.target.result);
+      setImportData(result.diagram);
+      setImportWarnings(result.warnings);
+      setImportSummary({
+        tables: result.diagram.tables?.length ?? 0,
+        relationships: result.diagram.relationships?.length ?? 0,
+        enums: result.diagram.enums?.length ?? 0,
+      });
 
+      if (result.warnings.length > 0) {
+        setError({
+          type: STATUS.WARNING,
+          message: t("partial_import_warning"),
+        });
+      } else if (diagramIsEmpty()) {
+        setError({
+          type: STATUS.OK,
+          message: "Everything looks good. You can now import.",
+        });
+      } else {
+        setError({
+          type: STATUS.WARNING,
+          message:
+            "The current diagram is not empty. Importing a new diagram will overwrite the current changes.",
+        });
+      }
+    } catch (error) {
+      const message = error.diags?.[0]
+        ? `${error.diags[0].name} [Ln ${error.diags[0].location.start.line}, Col ${error.diags[0].location.start.column}]: ${error.diags[0].message}`
+        : error.message || "Unknown parse error";
       setError({ type: STATUS.ERROR, message });
     }
   };
@@ -186,18 +215,22 @@ export default function ImportDiagram({
         dragMainText={t("drag_and_drop_files")}
         dragSubText={getDragSubText()}
         accept={getAcceptableFileTypes()}
-        onRemove={() =>
+        onRemove={() => {
           setError({
             type: STATUS.NONE,
             message: "",
-          })
-        }
-        onFileChange={() =>
+          });
+          setImportWarnings([]);
+          setImportSummary(null);
+        }}
+        onFileChange={() => {
           setError({
             type: STATUS.NONE,
             message: "",
-          })
-        }
+          });
+          setImportWarnings([]);
+          setImportSummary(null);
+        }}
         limit={1}
       />
       {error.type === STATUS.ERROR ? (
@@ -220,6 +253,35 @@ export default function ImportDiagram({
             description={<div>{error.message}</div>}
           />
         )
+      )}
+      {importWarnings.length > 0 && importSummary && (
+        <div className="mt-3 border rounded-md p-3 text-sm">
+          <div className="font-semibold mb-2">{t("import_summary")}</div>
+          <div className="text-green-600 mb-1">
+            {t("tables_imported")}: {importSummary.tables}
+          </div>
+          <div className="text-green-600 mb-1">
+            {t("relationships_imported")}: {importSummary.relationships}
+          </div>
+          <div className="text-green-600 mb-2">
+            {t("enums_imported")}: {importSummary.enums}
+          </div>
+          <div className="font-semibold mb-1">
+            {t("items_skipped")}: {importWarnings.length}
+          </div>
+          <div className="max-h-32 overflow-y-auto">
+            {importWarnings.map((w, idx) => (
+              <div
+                key={idx}
+                className="text-xs text-orange-600 mb-1 flex gap-1"
+              >
+                <span className="font-medium">[{w.type}]</span>
+                {w.name && <span className="font-mono">{w.name}</span>}
+                <span>- {w.reason}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
