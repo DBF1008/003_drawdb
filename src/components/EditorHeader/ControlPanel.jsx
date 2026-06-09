@@ -169,9 +169,9 @@ export default function ControlPanel({
       if (a.element === ObjectType.TABLE) {
         deleteTable(a.data.table.id, false);
       } else if (a.element === ObjectType.AREA) {
-        deleteArea(areas[areas.length - 1].id, false);
+        deleteArea(a.data.area.id, false);
       } else if (a.element === ObjectType.NOTE) {
-        deleteNote(notes[notes.length - 1].id, false);
+        deleteNote(a.data.note.id, false);
       } else if (a.element === ObjectType.RELATIONSHIP) {
         deleteRelationship(a.data.relationship.id, false);
       } else if (a.element === ObjectType.TYPE) {
@@ -186,15 +186,17 @@ export default function ControlPanel({
         setRedoStack((prev) => [...prev, { ...a, x, y }]);
         updateTable(a.id, { x: a.x, y: a.y });
       } else if (a.element === ObjectType.AREA) {
+        const area = areas.find((t) => t.id === a.id);
         setRedoStack((prev) => [
           ...prev,
-          { ...a, x: areas[a.id].x, y: areas[a.id].y },
+          { ...a, x: area.x, y: area.y },
         ]);
         updateArea(a.id, { x: a.x, y: a.y });
       } else if (a.element === ObjectType.NOTE) {
+        const note = notes.find((t) => t.id === a.id);
         setRedoStack((prev) => [
           ...prev,
-          { ...a, x: notes[a.id].x, y: notes[a.id].y },
+          { ...a, x: note.x, y: note.y },
         ]);
         updateNote(a.id, { x: a.x, y: a.y });
       }
@@ -341,9 +343,9 @@ export default function ControlPanel({
       if (a.element === ObjectType.TABLE) {
         addTable(a.data, false);
       } else if (a.element === ObjectType.AREA) {
-        addArea(null, false);
+        addArea(a.data, false);
       } else if (a.element === ObjectType.NOTE) {
-        addNote(null, false);
+        addNote(a.data, false);
       } else if (a.element === ObjectType.RELATIONSHIP) {
         addRelationship(a.data, false);
       } else if (a.element === ObjectType.TYPE) {
@@ -358,15 +360,17 @@ export default function ControlPanel({
         setUndoStack((prev) => [...prev, { ...a, x, y }]);
         updateTable(a.id, { x: a.x, y: a.y });
       } else if (a.element === ObjectType.AREA) {
+        const area = areas.find((t) => t.id === a.id);
         setUndoStack((prev) => [
           ...prev,
-          { ...a, x: areas[a.id].x, y: areas[a.id].y },
+          { ...a, x: area.x, y: area.y },
         ]);
         updateArea(a.id, { x: a.x, y: a.y });
       } else if (a.element === ObjectType.NOTE) {
+        const note = notes.find((t) => t.id === a.id);
         setUndoStack((prev) => [
           ...prev,
-          { ...a, x: notes[a.id].x, y: notes[a.id].y },
+          { ...a, x: note.x, y: note.y },
         ]);
         updateNote(a.id, { x: a.x, y: a.y });
       }
@@ -376,9 +380,9 @@ export default function ControlPanel({
       } else if (a.element === ObjectType.RELATIONSHIP) {
         deleteRelationship(a.data.relationship.id, false);
       } else if (a.element === ObjectType.NOTE) {
-        deleteNote(a.data.id, false);
+        deleteNote(a.data.note.id, false);
       } else if (a.element === ObjectType.AREA) {
-        deleteArea(a.data.id, false);
+        deleteArea(a.data.area.id, false);
       } else if (a.element === ObjectType.TYPE) {
         deleteType(a.data.type.id, false);
       } else if (a.element === ObjectType.ENUM) {
@@ -675,22 +679,30 @@ export default function ControlPanel({
         });
         break;
       }
-      case ObjectType.NOTE:
+      case ObjectType.NOTE: {
+        const copiedNote = notes.find((n) => n.id === selectedElement.id);
         addNote({
-          ...notes[selectedElement.id],
-          x: notes[selectedElement.id].x + 20,
-          y: notes[selectedElement.id].y + 20,
-          id: notes.length,
+          note: {
+            ...copiedNote,
+            x: copiedNote.x + 20,
+            y: copiedNote.y + 20,
+            id: nanoid(),
+          },
         });
         break;
-      case ObjectType.AREA:
+      }
+      case ObjectType.AREA: {
+        const copiedArea = areas.find((a) => a.id === selectedElement.id);
         addArea({
-          ...areas[selectedElement.id],
-          x: areas[selectedElement.id].x + 20,
-          y: areas[selectedElement.id].y + 20,
-          id: areas.length,
+          area: {
+            ...copiedArea,
+            x: copiedArea.x + 20,
+            y: copiedArea.y + 20,
+            id: nanoid(),
+          },
         });
         break;
+      }
       default:
         break;
     }
@@ -706,12 +718,16 @@ export default function ControlPanel({
         break;
       case ObjectType.NOTE:
         navigator.clipboard
-          .writeText(JSON.stringify({ ...notes[selectedElement.id] }))
+          .writeText(
+            JSON.stringify(notes.find((n) => n.id === selectedElement.id)),
+          )
           .catch(() => Toast.error(t("oops_smth_went_wrong")));
         break;
       case ObjectType.AREA:
         navigator.clipboard
-          .writeText(JSON.stringify({ ...areas[selectedElement.id] }))
+          .writeText(
+            JSON.stringify(areas.find((a) => a.id === selectedElement.id)),
+          )
           .catch(() => Toast.error(t("oops_smth_went_wrong")));
         break;
       default:
@@ -741,17 +757,21 @@ export default function ControlPanel({
         });
       } else if (v.validate(obj, areaSchema).valid) {
         addArea({
-          ...obj,
-          x: obj.x + 20,
-          y: obj.y + 20,
-          id: areas.length,
+          area: {
+            ...obj,
+            x: obj.x + 20,
+            y: obj.y + 20,
+            id: nanoid(),
+          },
         });
       } else if (v.validate(obj, noteSchema)) {
         addNote({
-          ...obj,
-          x: obj.x + 20,
-          y: obj.y + 20,
-          id: notes.length,
+          note: {
+            ...obj,
+            x: obj.x + 20,
+            y: obj.y + 20,
+            id: nanoid(),
+          },
         });
       }
     });

@@ -19,7 +19,7 @@ export default function NotesTab() {
           setActiveKey={(activeKey) =>
             setSelectedElement((prev) => ({
               ...prev,
-              id: parseInt(activeKey),
+              id: activeKey,
             }))
           }
         />
@@ -44,14 +44,14 @@ export default function NotesTab() {
           onChange={(activeKey) => {
             setSelectedElement((prev) => ({
               ...prev,
-              id: parseInt(activeKey),
+              id: activeKey,
               open: true,
             }));
           }}
           accordion
         >
-          {notes.map((n, i) => (
-            <NoteInfo data={n} key={i} nid={i} />
+          {notes.map((n) => (
+            <NoteInfo data={n} key={n.id} nid={n.id} />
           ))}
         </Collapse>
       )}

@@ -8,6 +8,7 @@ import {
 import { useUndoRedo, useTransform, useSelect, useCollab } from "../hooks";
 import { Toast } from "@douyinfe/semi-ui";
 import { useTranslation } from "react-i18next";
+import { nanoid } from "nanoid";
 
 export const NotesContext = createContext(null);
 
@@ -21,32 +22,33 @@ export default function NotesContextProvider({ children }) {
   const shouldEmit = () => !isApplyingRemoteRef?.current;
 
   const addNote = (data, addToHistory = true) => {
-    let created = data;
+    const id = nanoid();
+    const height = 88;
+    const newNote = {
+      id,
+      x: transform.pan.x,
+      y: transform.pan.y - height / 2,
+      title: `note_${id}`,
+      content: "",
+      locked: false,
+      color: defaultNoteTheme,
+      height,
+      width: noteWidth,
+    };
     if (data) {
       setNotes((prev) => {
         const temp = prev.slice();
-        temp.splice(data.id, 0, data);
-        return temp.map((t, i) => ({ ...t, id: i }));
+        temp.splice(data.index ?? prev.length, 0, data.note);
+        return temp;
       });
     } else {
-      const height = 88;
-      created = {
-        id: notes.length,
-        x: transform.pan.x,
-        y: transform.pan.y - height / 2,
-        title: `note_${notes.length}`,
-        content: "",
-        locked: false,
-        color: defaultNoteTheme,
-        height,
-        width: noteWidth,
-      };
-      setNotes((prev) => [...prev, { ...created, id: prev.length }]);
+      setNotes((prev) => [...prev, newNote]);
     }
     if (addToHistory) {
       setUndoStack((prev) => [
         ...prev,
         {
+          data: data || { note: newNote, index: notes.length },
           action: Action.ADD,
           element: ObjectType.NOTE,
           message: t("add_note"),
@@ -54,7 +56,8 @@ export default function NotesContextProvider({ children }) {
       ]);
       setRedoStack([]);
     }
-    if (shouldEmit() && created) {
+    if (shouldEmit()) {
+      const created = data?.note ?? newNote;
       emitDelta({
         target: "note",
         action: "create",
@@ -66,21 +69,21 @@ export default function NotesContextProvider({ children }) {
 
   const deleteNote = (id, addToHistory = true) => {
     if (addToHistory) {
+      const deletedNote = notes.find((n) => n.id === id);
+      const deletedNoteIndex = notes.findIndex((n) => n.id === id);
       Toast.success(t("note_deleted"));
       setUndoStack((prev) => [
         ...prev,
         {
           action: Action.DELETE,
           element: ObjectType.NOTE,
-          data: notes[id],
-          message: t("delete_note", { noteTitle: notes[id].title }),
+          data: { note: deletedNote, index: deletedNoteIndex },
+          message: t("delete_note", { noteTitle: deletedNote.title }),
         },
       ]);
       setRedoStack([]);
     }
-    setNotes((prev) =>
-      prev.filter((e) => e.id !== id).map((e, i) => ({ ...e, id: i })),
-    );
+    setNotes((prev) => prev.filter((e) => e.id !== id));
     if (id === selectedElement.id) {
       setSelectedElement((prev) => ({
         ...prev,

@@ -114,7 +114,7 @@ export default function NoteInfo({ data, nid }) {
               {
                 action: Action.EDIT,
                 element: ObjectType.NOTE,
-                nid: nid,
+                nid: data.id,
                 undo: editField,
                 redo: { content: e.target.value, height: newHeight },
                 message: t("edit_note", {
@@ -139,7 +139,7 @@ export default function NoteInfo({ data, nid }) {
             type="danger"
             disabled={layout.readOnly}
             icon={<IconDeleteStroked />}
-            onClick={() => deleteNote(nid, true)}
+            onClick={() => deleteNote(data.id, true)}
           />
         </div>
       </div>
